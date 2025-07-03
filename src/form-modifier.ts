@@ -126,9 +126,40 @@ export function applyDataToForm(formGroups: FieldGroup[], queryData: QueryGroupD
                 const fieldElement = document.getElementById(targetField.id);
                 if (fieldElement) {
                     if (targetField.type === 'control_datetime') {
+                        console.log(`日付フィールド(id: ${targetField.id})の値を設定します。値: ${value}`);
+                        // 表示されている日付入力フィールドに値を設定
                         const visibleDateInput = fieldElement.querySelector<HTMLInputElement>('input[id^="lite_mode_"]');
                         if (visibleDateInput) {
                             visibleDateInput.value = value;
+                            console.log(`  - 表示用input (id: ${visibleDateInput.id}) の値を更新しました。`);
+                        }
+
+                        // Jotformの送信に使われる隠しフィールド（年/月/日）にも値を設定
+                        const dateParts = value.split('-');
+                        if (dateParts.length === 3) {
+                            const [year, month, day] = dateParts;
+                            console.log(`  - 日付を分割しました: year=${year}, month=${month}, day=${day}`);
+                            
+                            // name属性を元に、該当グループ内の年/月/日のinputを特定する
+                            const yearInput = fieldElement.querySelector<HTMLInputElement>('input[name$="[year]"]');
+                            const monthInput = fieldElement.querySelector<HTMLInputElement>('input[name$="[month]"]');
+                            const dayInput = fieldElement.querySelector<HTMLInputElement>('input[name$="[day]"]');
+
+                            if (yearInput) {
+                                console.log(`  - [変更前] 隠しフィールド (年, name: ${yearInput.name}) の値:`, yearInput.value);
+                                yearInput.value = year;
+                                console.log(`  - [変更後] 隠しフィールド (年, name: ${yearInput.name}) の値:`, yearInput.value);
+                            }
+                            if (monthInput) {
+                                console.log(`  - [変更前] 隠しフィールド (月, name: ${monthInput.name}) の値:`, monthInput.value);
+                                monthInput.value = month;
+                                console.log(`  - [変更後] 隠しフィールド (月, name: ${monthInput.name}) の値:`, monthInput.value);
+                            }
+                            if (dayInput) {
+                                console.log(`  - [変更前] 隠しフィールド (日, name: ${dayInput.name}) の値:`, dayInput.value);
+                                dayInput.value = day;
+                                console.log(`  - [変更後] 隠しフィールド (日, name: ${dayInput.name}) の値:`, dayInput.value);
+                            }
                         }
                     } else {
                         const input = fieldElement.querySelector('input, select, textarea');

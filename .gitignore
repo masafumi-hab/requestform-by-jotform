@@ -1,24 +1,11 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+/dist
+.env
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+00_RESTART_PROMPT.md
+01_HANDOVER_PROMPT.md
+Vite_Build_Troubleshooting.md
+backup_root_20250630/
+backup_root_20250703/
+github_backup/
+スクリーンショット 2025-07-03 15.21.25.png
