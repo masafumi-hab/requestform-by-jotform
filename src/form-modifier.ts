@@ -13,14 +13,24 @@ interface QueryGroupData {
   fields: QueryFieldData;
 }
 
+interface TopLevelFieldData {
+  [key: string]: string;
+}
+
+interface PrefillData {
+  topLevel?: TopLevelFieldData; // トップレベルのフィールドデータ (オプション)
+  groups: QueryGroupData[]; // 既存のグループデータ
+}
+
 /**
  * URLのクエリパラメータ 'data' を解析し、Base64デコードしてJSONオブジェクトとして返します。
- * @returns {QueryGroupData[] | null} 解析されたデータ。失敗した場合はnull。
+ * @returns {PrefillData | null} 解析されたデータ。失敗した場合はnull。
  */
-export function parseQueryParameters(): QueryGroupData[] | null {
+export function parseQueryParameters(): PrefillData | null {
   const params = new URLSearchParams(window.location.search);
   let data = params.get('data');
   if (!data) {
+    console.log("クエリパラメータ 'data' が見つかりませんでした。");
     return null;
   }
 
@@ -33,12 +43,14 @@ export function parseQueryParameters(): QueryGroupData[] | null {
     }
     const decodedString = new TextDecoder().decode(bytes);
     
-    console.log("Decoded string from Base64:", decodedString);
+    console.log("Base64デコードされた文字列:", decodedString);
     
-    return JSON.parse(decodedString);
+    const parsedData: PrefillData = JSON.parse(decodedString);
+    console.log("解析されたPrefillデータ:", parsedData);
+    return parsedData;
   } catch (e) {
-    console.error('Failed to parse query parameter data:', e);
-    console.error('Error details:', {
+    console.error('クエリパラメータのデータ解析に失敗しました:', e);
+    console.error('エラー詳細:', {
         type: (e as Error).name,
         message: (e as Error).message,
         rawData: params.get('data')
@@ -50,13 +62,53 @@ export function parseQueryParameters(): QueryGroupData[] | null {
 /**
  * フォームの構造とクエリからのデータを使って、画面の表示を更新します。
  * @param formGroups - jotform-parserから取得したグループ化済みフィールド
- * @param queryData - クエリパラメータから解析したデータ (存在しない場合もある)
+ * @param prefillData - クエリパラメータから解析したPrefillデータ (存在しない場合もある)
  */
-export function applyDataToForm(formGroups: FieldGroup[], queryData: QueryGroupData[] | null): void {
+export function applyDataToForm(formGroups: FieldGroup[], prefillData: PrefillData | null): void {
+  // トップレベルフィールドの処理
+  if (prefillData && prefillData.topLevel) {
+    console.log("トップレベルフィールドの処理を開始します。");
+    const topLevel = prefillData.topLevel;
+
+    // お子さんの氏名 (姓)
+    if (topLevel['お子さんの氏名_姓']) {
+      const firstNameInput = document.getElementById('first_195') as HTMLInputElement;
+      if (firstNameInput) {
+        console.log(`  - お子さんの氏名 (姓) を設定: ${topLevel['お子さんの氏名_姓']}`);
+        firstNameInput.value = topLevel['お子さんの氏名_姓'];
+      }
+    }
+    // お子さんの氏名 (名)
+    if (topLevel['お子さんの氏名_名']) {
+      const lastNameInput = document.getElementById('last_195') as HTMLInputElement;
+      if (lastNameInput) {
+        console.log(`  - お子さんの氏名 (名) を設定: ${topLevel['お子さんの氏名_名']}`);
+        lastNameInput.value = topLevel['お子さんの氏名_名'];
+      }
+    }
+    // 保護者メールアドレス
+    if (topLevel['保護者メールアドレス']) {
+      const emailInput = document.getElementById('input_6') as HTMLInputElement;
+      if (emailInput) {
+        console.log(`  - 保護者メールアドレスを設定: ${topLevel['保護者メールアドレス']}`);
+        emailInput.value = topLevel['保護者メールアドレス'];
+      }
+    }
+    // 対象月
+    if (topLevel['対象月']) {
+      const monthSelect = document.getElementById('input_34') as HTMLSelectElement;
+      if (monthSelect) {
+        console.log(`  - 対象月を設定: ${topLevel['対象月']}`);
+        monthSelect.value = topLevel['対象月'];
+      }
+    }
+    console.log("トップレベルフィールドの処理を完了しました。");
+  }
+
   // フォームに存在するすべてのグループをループ
   formGroups.forEach((targetGroup, index) => {
     // 対応するクエリデータを取得 (存在しない場合は undefined)
-    const groupData = queryData ? queryData[index] : undefined;
+    const groupData = prefillData && prefillData.groups ? prefillData.groups[index] : undefined;
 
     // --- 「リクエスト内容」の動的書き換え処理 ---
     const requestField = targetGroup.childFields.find(f => f.text === 'リクエスト内容');
